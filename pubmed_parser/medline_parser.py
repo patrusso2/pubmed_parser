@@ -502,6 +502,9 @@ def parse_article_info(
     medline = pubmed_article.find("MedlineCitation")
     article = medline.find("Article")
 
+    # TODO Dont hardcode this
+    abstract_xml = True
+
     if article.find("ArticleTitle") is not None:
         title = stringify_children(article.find("ArticleTitle")).strip() or ""
     else:
@@ -510,7 +513,7 @@ def parse_article_info(
     category = "NlmCategory" if nlm_category else "Label"
     if article.find("Abstract/AbstractText") is not None:
         # parsing structured abstract
-        if len(article.findall("Abstract/AbstractText")) > 1:
+        if len(article.findall("Abstract/AbstractText")) > 1 and abstract_xml is False:
             abstract_list = list()
             for abstract in article.findall("Abstract/AbstractText"):
                 section = abstract.attrib.get(category, "")
@@ -520,12 +523,17 @@ def parse_article_info(
                 section_text = stringify_children(abstract).strip()
                 abstract_list.append(section_text)
             abstract = "\n".join(abstract_list).strip()
-        else:
+        elif abstract_xml is False:
             abstract = (
                 stringify_children(article.find("Abstract/AbstractText")).strip() or ""
             )
-    elif article.find("Abstract") is not None:
+        else:
+            abstract = '<Abstract>' + ''.join(lxml.etree.tostring(ab, encoding = "unicode").strip() for ab in article.findall("Abstract/AbstractText")) + '</Abstract>'
+
+    elif article.find("Abstract") is not None and abstract_xml is False:
         abstract = stringify_children(article.find("Abstract")).strip() or ""
+    elif article.find("Abstract") is not None and abstract_xml:
+        abstract = '<Abstract>'+ lxml.etree.tostring(article.find("Abstract/AbstractText"), encoding = "unicode")+'</Abstract>'
     else:
         abstract = ""
 
