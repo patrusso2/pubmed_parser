@@ -6,6 +6,8 @@ import numpy as np
 from itertools import chain
 from collections import defaultdict
 from pubmed_parser.utils import read_xml, stringify_children, month_or_day_formater
+import lxml
+
 
 __all__ = ["parse_medline_xml", "parse_medline_grant_id"]
 
